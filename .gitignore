@@ -1,0 +1,19 @@
+# Archivo .gitignore (crear en raíz del proyecto)
+echo "
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Node.js
+node_modules/
+dist/
+
+# Environment variables
+.env
+.env.local
+
+# Database
+*.db
+*.sqlite3
+" > .gitignore
