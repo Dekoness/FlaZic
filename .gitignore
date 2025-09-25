@@ -1,13 +1,14 @@
-# Archivo .gitignore (crear en raíz del proyecto)
+# Archivo .gitignore CORREGIDO
 echo "
 # Python
+.venv/
 venv/
 __pycache__/
 *.pyc
 
-# Node.js
-node_modules/
-dist/
+# Node.js (SOLO en frontend/, no en raíz)
+frontend/node_modules/
+frontend/dist/
 
 # Environment variables
 .env
