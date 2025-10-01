@@ -3,14 +3,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine, Column, String, Text, Boolean, DateTime, Integer
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID  # ← ELIMINAR ESTA LÍNEA
 from sqlalchemy.sql import func
-from pydantic import BaseModel, EmailStr, field_validator  # ← CAMBIADO
+from pydantic import BaseModel, EmailStr, field_validator
 from passlib.context import CryptContext
 import uuid
 import os
 from datetime import datetime, timedelta
-from typing import Optional, Any  # ← AÑADIDO
+from typing import Optional, Any
 # import hashlib
 import bcrypt
 
@@ -31,7 +31,8 @@ def get_db():
 class User(Base):
     __tablename__ = "users"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    # CAMBIO AQUÍ: Usar String en lugar de UUID para SQLite
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()), index=True)
     email = Column(String(255), unique=True, index=True, nullable=False)
     username = Column(String(50), unique=True, index=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
@@ -80,7 +81,7 @@ class UserCreate(UserBase):
         return v
 
 class UserResponse(UserBase):
-    id: uuid.UUID
+    id: str  # CAMBIO AQUÍ: Ahora es string en lugar de UUID
     bio: Optional[str] = None
     avatar_url: Optional[str] = None
     location: Optional[str] = None
@@ -144,7 +145,7 @@ class UserService:
         # Crear el usuario
         hashed_password = get_password_hash(user_data.password)
         db_user = User(
-            id=uuid.uuid4(),
+            # CAMBIO AQUÍ: Ya no necesitamos pasar id explícitamente por el default
             email=user_data.email,
             username=user_data.username,
             display_name=user_data.display_name,
@@ -202,7 +203,7 @@ def login(login_data: UserLogin, db: Session = Depends(get_db)):
     user = UserService.authenticate_user(db, login_data.email, login_data.password)
     return {
         "message": "Login successful",
-        "user_id": str(user.id),
+        "user_id": user.id,  # CAMBIO AQUÍ: Ya es string, no necesita str()
         "username": user.username,
         "email": user.email
     }
@@ -211,7 +212,7 @@ def login(login_data: UserLogin, db: Session = Depends(get_db)):
 def get_users(db: Session = Depends(get_db)):
     """Obtener todos los usuarios (para testing)"""
     users = db.query(User).all()
-    return {"users": [{"id": str(user.id), "username": user.username, "email": user.email} for user in users]}
+    return {"users": [{"id": user.id, "username": user.username, "email": user.email} for user in users]}
 
 # ==================== INICIAR SERVIDOR ====================
 if __name__ == "__main__":
